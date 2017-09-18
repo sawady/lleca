@@ -1,23 +1,26 @@
 name:                lleca
-version:             0.1.0.0
--- synopsis:
--- description:
-homepage:            https://github.com/githubuser/lleca#readme
+version:             1.0.0.0
+synopsis:            Parser generator made in Haskell
+description:         Please see README.md
+homepage:            https://github.com/sawady/lleca
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2017 Author name here
-category:            Web
+author:              Federico Sawady and Damian Lattenero
+maintainer:          sawady.faso@gmail.com
+copyright:           2017 Federico Sawady
+category:            Language
 build-type:          Simple
-extra-source-files:  README.md
+extra-source-files:  src/Parser.y
 cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lexer
+  exposed-modules:     Lexer,
+                       Parser
   build-depends:       base >= 4.7 && < 5
+  build-tools:         happy
   default-language:    Haskell2010
+  ghc-options:         -threaded
 
 executable lleca-exe
   hs-source-dirs:      app
