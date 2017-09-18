@@ -9,24 +9,35 @@ import Lexer
 %error { parseError }
 
 %token
+  'ID' { TokenLit "ID"  }
+  'NUM' { TokenLit "NUM"  }
+  'STRING' { TokenLit "STRING" }
+  '_' { TokenLit "_" }
+  '|' { TokenLit "|" }
+  '=>' { TokenLit "=>" }
+  '$' { TokenLit "$" }
+  '(' { TokenLit "(" }
+  ')' { TokenLit ")" }
+  ',' { TokenLit "," }
+  '[' { TokenLit "[" }
+  ']' { TokenLit "]" }
   TkNum { TokenNum $$ }
   TkString { TokenString $$ }
   TkId { TokenId $$ }
-  TkLit { TokenLit $$ }
 %%
 
-Grammar : {- empty -}                               { EmptyGrammar }
-        | Rule Grammar                              { Rule $1 $2 }
+Grammar : {- empty -}                               { [] }
+        | Rule Grammar                              { Rule (fst $1) (snd $1) : $2 }
 
-Rule : TkId Productions                             { (snd $1, $2) }
+Rule : TkId Productions                             { ($1, $2) }
 
-Productions : {- empty production -}                { EmptyProduction }
-            | Production Productions                { MkProduction $1 $2 }
+Productions : {- empty production -}                { [] }
+            | Production Productions                { Production (fst $1) (snd $1) : $2 }
 
-Production : '|' Expansion '=>' Term                { ($1, $2) }
+Production : '|' Expansion '=>' Term                { ($2, $4) }
 
-Expansion : {- empty -}                             { EmptyExpansion }
-          | Symbol Expansion                        { Expansion $1 $2 }
+Expansion : {- empty -}                             { [] }
+          | Symbol Expansion                        { $1 : $2 }
 
 Symbol : 'ID'                                       { SymID }
        | 'STRING'                                   { SymSTRING }
@@ -35,10 +46,10 @@ Symbol : 'ID'                                       { SymID }
        | TkId                                       { SId $1 }
 
 Term : '_'                                          { Hole }
-     | TkId Args                                    { TId $2 }
+     | TkId Args                                    { TId $1 $2 }
      | TkString                                     { TString $1 }
      | TkNum                                        { TNum $1 }
-     | '$' TkNum Sustitution                        { TSust $1 $2 }
+     | '$' TkNum Sustitution                        { TSust $2 $3 }
 
 Args : {- empty -}                                  { [] }
      | '(' ArgList ')'                              { $2 }
@@ -47,38 +58,32 @@ ArgList : {- empty -}                               { [] }
         | Term ArgListCont                          { $1 : $2 }
 
 ArgListCont : {- empty -}                           { [] }
-            | ',' Term ArgListCont                  { $1 : $2 }
+            | ',' Term ArgListCont                  { $2 : $3 }
 
-Sustitution : {- empty -}                            { EmptySustitution }
-           | '[' Term ']'                           { Sustitution $2 }
+Sustitution : {- empty -}                           { Nothing }
+           | '[' Term ']'                           { Just $2 }
 
 {
 
 parseError :: [Token] -> a
-parseError (token:tokens) = error ("Parse error: invalid symbol \"" ++ token)
+parseError (token:tokens) = error ("Parse error: invalid symbol \"" ++ show token)
 
-data Grammar = EmptyGrammar
-             | Rule (String, [Productions]) Grammar
+type Grammar = [Rule]
 
-data Productions = EmptyProduction
-                 | MkProduction (Expansion, Term) Productions
+data Rule = Rule String [Production] deriving (Eq, Show)
 
-data Expansion = EmptyExpansion
-               | Expansion Symbol Expansion
+data Production = Production [Symbol] Term deriving (Eq, Show)
     
 data Symbol = SymID
             | SymSTRING 
             | SymNUM
             | SString String 
-            | SId String
+            | SId String deriving (Eq, Show)
 
 data Term = Hole 
           | TId String [Term]
           | TString String 
           | TNum Int 
-          | TSust Int Sustituion
-
-data Sustitution = EmptySustitution
-                 | Sustitution Term
+          | TSust Int (Maybe Term) deriving (Eq, Show)
 
 }

@@ -29,4 +29,3 @@ termino1
 factor
 | NUM               => $1
 | "(" expresion ")" => $2
-
