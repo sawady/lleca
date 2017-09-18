@@ -1,6 +1,12 @@
 module Main where
 
-import Lib
+import Lexer
 
 main :: IO ()
-main = someFunc
+main = do
+    s <- getContents
+    print s
+    putStrLn "------------"
+    putStrLn "------------"
+    putStrLn "------------"
+    print (lexer ["fun"] ["{", "}", ":", "(", "*", "+", ")", ",", ":=", "-", "==", ">=", "<=", ">", "<", "!=", "[", "]", "#", "|", "=", "$", "=>", "\\", "."] s)

@@ -1,2 +1,8 @@
+import Test.Hspec
+
+import qualified SpecLexer as L
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do
+  _ <- L.test
+  putStrLn "\n3 test groups executed, check the console above to see the results"
