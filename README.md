@@ -36,7 +36,7 @@ Puede ver los argumentos esperados ejecutando el programa con el flag `-?` o `--
 Utilice stack de la siguiente forma para ver la ayuda de la aplicación:
 
 ```
-stack exec cucaracha-exe -- -?
+stack exec lleca-exe -- -?
 ```
 
 El primer doble guion indica que los argumentos deben ser pasados a la aplicación
