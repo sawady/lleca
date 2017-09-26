@@ -4,14 +4,14 @@ import Lexer
 import Parser
 import Data.Char
 import Data.List
+import qualified Data.Set as Set
 
 llecaKeywords = ["_", "ID", "STRING", "NUM"]
 llecaSymbols  = ["|", "=>", "$", "(", ")", ",", "[", "]"]
 
 calcKeywords :: Grammar -> ([String], [String])
-calcKeywords g = partition isVar (concat $ map collect1 g)
-    where collect1 (Rule name prods) = concat $ map collect2 prods
-          collect2 (Production syms _) = map get $ filter isString syms
+calcKeywords g = partition isVar (concat $ map collect g)
+    where collect (Production _ syms _) = map get $ filter isString syms
           get (SString s) = s
           isString (SString s) = True
           isString _           = False
@@ -22,8 +22,8 @@ main = do
     contents <- getContents
     let tokenized = lexer llecaKeywords llecaSymbols contents
     let parsed    = parse tokenized
-    print parsed
+    mapM print parsed
     putStrLn "----------------------"
     putStrLn "----------------------"
-    putStrLn "----------------------"
+    putStrLn "Reserved symbols------"
     print $ calcKeywords parsed

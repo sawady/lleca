@@ -19,7 +19,8 @@ library
                        Parser
   build-depends:       base >= 4.7 && < 5,
                        array,
-                       pretty
+                       pretty,
+                       containers
   build-tools:         happy
   default-language:    Haskell2010
   ghc-options:         -threaded
@@ -30,6 +31,7 @@ executable lleca-exe
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , lleca
+                     , containers
   default-language:    Haskell2010
 
 test-suite lleca-test

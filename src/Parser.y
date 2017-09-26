@@ -27,12 +27,12 @@ import Lexer
 %%
 
 Grammar : {- empty -}                               { [] }
-        | Rule Grammar                              { Rule (fst $1) (snd $1) : $2 }
+        | Rule Grammar                              { $1 ++ $2 }
 
-Rule : TkId Productions                             { ($1, $2) }
+Rule : TkId Productions                             { map (\(e, t) -> Production $1 e t) $2 }
 
 Productions : {- empty production -}                { [] }
-            | Production Productions                { Production (fst $1) (snd $1) : $2 }
+            | Production Productions                { $1 : $2 }
 
 Production : '|' Expansion '=>' Term                { ($2, $4) }
 
@@ -68,12 +68,10 @@ Sustitution : {- empty -}                           { Nothing }
 parseError :: [Token] -> a
 parseError (token:tokens) = error ("Parse error: invalid symbol \"" ++ show token)
 
-type Grammar = [Rule]
+type Grammar = [Production]
 
-data Rule = Rule String [Production] deriving (Eq, Show)
+data Production = Production String [Symbol] Term deriving (Eq, Show)
 
-data Production = Production [Symbol] Term deriving (Eq, Show)
-    
 data Symbol = SymID
             | SymSTRING 
             | SymNUM
