@@ -7,7 +7,8 @@ import Data.Maybe
 data Token = TokenId String
            | TokenNum Int
            | TokenString String
-           | TokenLit String deriving (Show, Eq)
+           | TokenLit String 
+           | TokenDollar deriving (Show, Eq)
 
 lexer :: [String] -> [String] -> String -> [Token]
 lexer kws syms [] = []

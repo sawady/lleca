@@ -21,7 +21,8 @@ library
   build-depends:       base >= 4.7 && < 5,
                        array,
                        pretty,
-                       containers
+                       containers,
+                       mtl
   build-tools:         happy
   default-language:    Haskell2010
   ghc-options:         -threaded

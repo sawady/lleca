@@ -70,7 +70,7 @@ parseError (token:tokens) = error ("Parse error: invalid symbol \"" ++ show toke
 
 type Grammar = [Production]
 
-data Production = Production String [Symbol] Term deriving (Eq, Show)
+data Production = Production String [Symbol] TermAction deriving (Ord, Eq, Show)
 
 data Symbol = SymID
             | SymSTRING 
@@ -80,10 +80,10 @@ data Symbol = SymID
             | Epsilon 
             | DollarSign deriving (Read, Eq, Ord, Show)
 
-data Term = Hole 
-          | TId String [Term]
-          | TString String 
-          | TNum Int 
-          | TSust Int (Maybe Term) deriving (Eq, Show)
+data TermAction = Hole 
+                | TId String [TermAction]
+                | TString String 
+                | TNum Int 
+                | TSust Int (Maybe TermAction) deriving (Ord, Eq, Show)
 
 }

@@ -8,8 +8,19 @@ import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
 import Data.Maybe
 
+import Control.Monad.Except
+import Control.Monad.State.Strict
+import Control.Monad
+
 type FirstSet = Map.Map Symbol (Set.Set Symbol)
 type FollowSet = Map.Map Symbol (Set.Set Symbol)
+type LLTable   = Map.Map (Symbol, Symbol) (Set.Set Production)
+
+data Termino = 
+    Agujero
+  | Cadena String
+  | Numero Int
+  | Estructura String [Termino] deriving (Eq, Show)
 
 llecaKeywords = ["_", "ID", "STRING", "NUM"]
 llecaSymbols  = ["|", "=>", "$", "(", ")", ",", "[", "]"]
@@ -95,3 +106,95 @@ followSet metas grammar fs = untilNoChanges $ iterate step2 step1
                 else calcBetas ss
           anullableBetas bs = map fst $ filter (\(s, ss) -> Set.member Epsilon (firstOfString ss fs)) bs 
           addMetaA s syms m = foldr (\s' rm -> Map.update (\set -> Just $ Set.union (lookupM s' rm) (lookupM s rm)) s' rm) m syms
+
+generateTable :: [Symbol] -> [Symbol] -> Grammar -> FirstSet -> FollowSet -> LLTable
+generateTable terminals metas grammar frsts fws = checkLL1 step
+    where wmap = initialMap [ (x,y) | x <- metas, y <- DollarSign : terminals ]
+          step = foldr (\p@(Production n syms _) rm -> addIfAnullable p (SymMeta n) syms $ addFromTerminals p rm (SymMeta n) syms) wmap grammar
+          addFromTerminals p m a syms = Set.foldr (\x rm -> insertEntry p a x rm) m 
+                                                  (Set.filter isTerminal $ takeFirstWithoutEpsilon syms)
+          takeFirstWithoutEpsilon syms = Set.delete Epsilon $ firstOfString syms frsts
+          insertEntry p a x m = Map.update (\set -> Just $ Set.insert p set) (a, x) m
+          addIfAnullable p a syms m = 
+            if Set.member Epsilon $ firstOfString syms frsts
+                then Set.foldr (\x rm -> insertEntry p a x rm) m (lookupM a fws)
+                else m
+
+checkLL1 s = if all (\s -> Set.size s <= 1) (Map.elems s) then s else error "The grammar is not LL(1)"
+
+equalSym :: Token -> Symbol -> Bool
+equalSym (TokenId s) SymID = True
+equalSym (TokenNum n) SymNUM = True
+equalSym (TokenString s) SymSTRING = True
+equalSym (TokenLit s1) (SymLit s2) = s1 == s2
+equalSym TokenDollar DollarSign = True
+equalSym _ _ = False
+
+leaf :: Token -> Termino
+leaf (TokenId s) = Estructura s []
+leaf (TokenNum n) = Numero n
+leaf (TokenString s) = Cadena s
+leaf (TokenLit s) = Estructura s []
+
+toSym :: Token -> Symbol
+toSym (TokenId s) = SymID
+toSym (TokenNum n) = SymNUM
+toSym (TokenString s) = SymSTRING
+toSym (TokenLit s) = SymLit s
+toSym TokenDollar = DollarSign
+
+parseTermino :: String -> String -> IO Termino
+parseTermino grammar input = 
+    let tokenizedGrammar = lexer llecaKeywords llecaSymbols grammar
+        parsedGrammar = parse tokenizedGrammar
+        (kws, syms) = calcKeywords parsedGrammar
+        metas = metaSymbols parsedGrammar
+        terminals = terminalSymbols parsedGrammar
+        frset = firstSet terminals metas parsedGrammar
+        foset = followSet metas parsedGrammar frset
+        table = generateTable terminals metas parsedGrammar frset foset
+        tokenizedInput = lexer kws syms input
+        firstSymbol = head metas
+        in do mapM_ print (Map.assocs table)
+              mapM_ print (tokenizedInput ++ [TokenDollar])
+              return $ analize firstSymbol table (tokenizedInput ++ [TokenDollar])
+
+analize :: Symbol -> LLTable -> [Token] -> Termino
+analize x table ts = 
+    case evalState (runExceptT $ analizeWithState x table) ts of
+        Left e  -> error e
+        Right x -> x
+
+analizeWithState :: Symbol -> LLTable -> ExceptT String (State [Token]) Termino
+analizeWithState x table = 
+    do 
+        ts <- get
+        when (null ts) (throwError "Cadena consumida")
+        if isTerminal x
+            then do 
+                    b <- fmap head get
+                    modify tail
+                    if equalSym b x
+                        then return $ leaf b
+                        else throwError $ "Syntax error, expected: " ++ show x ++ " but " ++ show b ++ " given"
+            else do
+                b <- fmap head get
+                let set = lookupM (x, toSym b) table
+                when (Set.null set) (throwError $ "Syntax error, expected: " ++ show x ++ " but " ++ show b ++ " given")
+                let (Production n syms act) = head (Set.elems set)
+                args <- forM syms (`analizeWithState` table)
+                return (generateAction act args)
+
+generateAction :: TermAction -> [Termino] -> Termino
+generateAction Hole _ = Agujero
+generateAction (TString s) _ = Cadena s
+generateAction (TNum n) _ = Numero n
+generateAction (TId s as) args = Estructura s (map (`generateAction` args) as) 
+generateAction (TSust i Nothing) args = args !! i
+generateAction (TSust i (Just sust)) args = fillHole (args !! i) (generateAction sust args)
+
+fillHole :: Termino -> Termino -> Termino
+fillHole Agujero t = t
+fillHole (Estructura s ts) t = Estructura s (map (`fillHole` t) ts)
+fillHole x _ = x
+
