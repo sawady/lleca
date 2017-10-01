@@ -12,6 +12,11 @@
 expresion
 | termino expresion1 => $2[$1]
 
+factor
+|                   => _
+| NUM               => $1
+| "(" expresion ")" => $2
+
 expresion1
 | /*EMPTY*/              => _
 | "+" termino expresion1 => $3[ add(_, $2) ]
@@ -25,7 +30,3 @@ termino1
 | "*" factor termino1   => $3[ mul(_, $2) ]
 | "div" factor termino1 => $3[ div(_, $2) ]
 | "mod" factor termino1 => $3[ mod(_, $2) ]
-
-factor
-| NUM               => $1
-| "(" expresion ")" => $2

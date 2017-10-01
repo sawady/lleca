@@ -2,28 +2,51 @@ module Main where
 
 import Lexer
 import Parser
-import Data.Char
-import Data.List
-import qualified Data.Set as Set
+import Generator
+import qualified Data.Map.Strict as Map
 
-llecaKeywords = ["_", "ID", "STRING", "NUM"]
-llecaSymbols  = ["|", "=>", "$", "(", ")", ",", "[", "]"]
-
-calcKeywords :: Grammar -> ([String], [String])
-calcKeywords g = partition isVar (concat $ map collect g)
-    where collect (Production _ syms _) = map get $ filter isString syms
-          get (SString s) = s
-          isString (SString s) = True
-          isString _           = False
-          isVar xs = head xs == '_' || isLetter (head xs)
+import System.Environment        
 
 main :: IO ()
 main = do
-    contents <- getContents
-    let tokenized = lexer llecaKeywords llecaSymbols contents
-    let parsed    = parse tokenized
-    mapM print parsed
+    args <- getArgs
+    grammar <- readFile (args !! 0)
+    let tokenized = lexer llecaKeywords llecaSymbols grammar
+    -- putStrLn "----------------------"
+    -- putStrLn "----------------------"
+    -- putStrLn "Tokenized grammar-----"
+    -- mapM_ print tokenized
+    let parsedGrammar    = parse tokenized
+    -- putStrLn "----------------------"
+    -- putStrLn "----------------------"
+    -- putStrLn "parsedGrammar --------"
+    -- mapM_ print parsedGrammar
+    -- putStrLn "----------------------"
+    -- putStrLn "----------------------"
+    -- putStrLn "Reserved symbols in grammar"
+    let (kws, syms) = calcKeywords parsedGrammar
+    -- print kws
+    -- print syms  
+    input <- readFile (args !! 1)
+    -- putStrLn "----------------------"
+    -- putStrLn "----------------------"
+    -- putStrLn "Tokenized input file--"
+    -- mapM_ print (lexer kws syms input)
+    -- putStrLn "----------------------"
+    -- putStrLn "----------------------"
+    -- putStrLn "Initial symbol--------"
+    -- print (initialMetaSymbol parsedGrammar)
+    -- putStrLn "----------------------"
+    -- putStrLn "----------------------"
+    -- putStrLn "Meta symbols----------"
+    let metas = metaSymbols parsedGrammar
+    -- mapM_ print metas
+    -- putStrLn "----------------------"
+    -- putStrLn "----------------------"
+    -- putStrLn "Terminal symbols------"
+    let terminals = terminalSymbols parsedGrammar
+    mapM_ print terminals
     putStrLn "----------------------"
     putStrLn "----------------------"
-    putStrLn "Reserved symbols------"
-    print $ calcKeywords parsed
+    putStrLn "First of grammar ------"
+    mapM_ print (Map.assocs $ firstSet terminals metas parsedGrammar)

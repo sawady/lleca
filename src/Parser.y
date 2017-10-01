@@ -42,8 +42,8 @@ Expansion : {- empty -}                             { [] }
 Symbol : 'ID'                                       { SymID }
        | 'STRING'                                   { SymSTRING }
        | 'NUM'                                      { SymNUM }
-       | TkString                                   { SString $1 }
-       | TkId                                       { SId $1 }
+       | TkString                                   { SymLit $1 }
+       | TkId                                       { SymMeta $1 }
 
 Term : '_'                                          { Hole }
      | TkId Args                                    { TId $1 $2 }
@@ -75,8 +75,9 @@ data Production = Production String [Symbol] Term deriving (Eq, Show)
 data Symbol = SymID
             | SymSTRING 
             | SymNUM
-            | SString String 
-            | SId String deriving (Eq, Show)
+            | SymLit String 
+            | SymMeta String
+            | Epsilon deriving (Eq, Ord, Show)
 
 data Term = Hole 
           | TId String [Term]
