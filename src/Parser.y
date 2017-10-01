@@ -77,7 +77,8 @@ data Symbol = SymID
             | SymNUM
             | SymLit String 
             | SymMeta String
-            | Epsilon deriving (Eq, Ord, Show)
+            | Epsilon 
+            | DollarSign deriving (Read, Eq, Ord, Show)
 
 data Term = Hole 
           | TId String [Term]

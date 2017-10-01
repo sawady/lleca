@@ -13,7 +13,6 @@ expresion
 | termino expresion1 => $2[$1]
 
 factor
-|                   => _
 | NUM               => $1
 | "(" expresion ")" => $2
 

@@ -49,4 +49,11 @@ main = do
     putStrLn "----------------------"
     putStrLn "----------------------"
     putStrLn "First of grammar ------"
-    mapM_ print (Map.assocs $ firstSet terminals metas parsedGrammar)
+    let fs = firstSet terminals metas parsedGrammar
+    mapM_ print $ Map.assocs fs
+    mapM_ print terminals
+    putStrLn "----------------------"
+    putStrLn "----------------------"
+    putStrLn "Follow of grammar -----"
+    mapM_ print $ Map.assocs $ followSet metas parsedGrammar fs
+
