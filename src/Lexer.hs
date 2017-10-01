@@ -35,7 +35,11 @@ lexLitOrId kws syms cs =
     where (s, rest) = span (\x -> isAlphaNum x || x == '_') cs
 
 lexString kws syms cs = TokenString s : lexer kws syms (tail rest)
-    where (s, rest) = span (\x -> x /= '\"') cs
+    where (s, rest) = span (\x -> x /= '\"') (desescape cs)
+          desescape []             = []
+          desescape ('\\':'\\':xs) = '\\' : desescape xs
+          desescape ('\\':'\"':xs) = '\"' : desescape xs
+          desescape (x:xs)         = x : desescape xs
 
 lexSymbol kws syms cs = 
     case s of 

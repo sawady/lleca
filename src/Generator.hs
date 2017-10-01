@@ -167,31 +167,28 @@ analize x table ts =
 
 analizeWithState :: Symbol -> LLTable -> ExceptT String (State [Token]) Termino
 analizeWithState x table = 
-    do 
-        ts <- get
-        when (null ts) (throwError "Cadena consumida")
-        if isTerminal x
-            then do 
-                    b <- fmap head get
-                    modify tail
-                    if equalSym b x
-                        then return $ leaf b
-                        else throwError $ "Syntax error, expected: " ++ show x ++ " but " ++ show b ++ " given"
-            else do
+    if isTerminal x
+        then do 
                 b <- fmap head get
-                let set = lookupM (x, toSym b) table
-                when (Set.null set) (throwError $ "Syntax error, expected: " ++ show x ++ " but " ++ show b ++ " given")
-                let (Production n syms act) = head (Set.elems set)
-                args <- forM syms (`analizeWithState` table)
-                return (generateAction act args)
+                modify tail
+                if equalSym b x
+                    then return $ leaf b
+                    else throwError $ "Syntax error, expected: " ++ show x ++ " but " ++ show b ++ " given"
+        else do
+            b <- fmap head get
+            let set = lookupM (x, toSym b) table
+            when (Set.null set) (throwError $ "Syntax error, expected: " ++ show x ++ " but " ++ show b ++ " given")
+            let (Production n syms act) = head (Set.elems set)
+            args <- forM syms (`analizeWithState` table)
+            return (generateAction act args)
 
 generateAction :: TermAction -> [Termino] -> Termino
 generateAction Hole _ = Agujero
 generateAction (TString s) _ = Cadena s
 generateAction (TNum n) _ = Numero n
 generateAction (TId s as) args = Estructura s (map (`generateAction` args) as) 
-generateAction (TSust i Nothing) args = args !! i
-generateAction (TSust i (Just sust)) args = fillHole (args !! i) (generateAction sust args)
+generateAction (TSust i Nothing) args = args !! (i-1)
+generateAction (TSust i (Just sust)) args = fillHole (args !! (i-1)) (generateAction sust args)
 
 fillHole :: Termino -> Termino -> Termino
 fillHole Agujero t = t
