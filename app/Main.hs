@@ -5,18 +5,18 @@ import Parser
 import Generator
 import qualified Data.Map.Strict as Map
 
-import System.Environment        
+import System.Environment
 
 main :: IO ()
 main = do
     args <- getArgs
     grammar <- readFile (args !! 0)
-    -- let tokenized = lexer llecaKeywords llecaSymbols grammar
+    let tokenized = lexer llecaKeywords llecaSymbols grammar
     -- -- putStrLn "----------------------"
     -- -- putStrLn "----------------------"
     -- -- putStrLn "Tokenized grammar-----"
     -- -- mapM_ print tokenized
-    -- let parsedGrammar    = parse tokenized
+    let parsedGrammar    = parse tokenized
     -- -- putStrLn "----------------------"
     -- -- putStrLn "----------------------"
     -- -- putStrLn "parsedGrammar --------"
@@ -24,9 +24,11 @@ main = do
     -- -- putStrLn "----------------------"
     -- -- putStrLn "----------------------"
     -- -- putStrLn "Reserved symbols in grammar"
-    -- let (kws, syms) = calcKeywords parsedGrammar
-    -- -- print kws
-    -- -- print syms  
+    let (kws, syms) = calcKeywords parsedGrammar
+    print kws
+    print syms  
+    print $ terminalSymbols parsedGrammar
+    print $ metaSymbols parsedGrammar
     -- -- putStrLn "----------------------"
     -- -- putStrLn "----------------------"
     -- -- putStrLn "Initial symbol--------"
@@ -61,6 +63,6 @@ main = do
     -- putStrLn "Tokenized input file--"
     input <- readFile (args !! 1)
     -- mapM_ print (lexer kws syms input)
-    t <- parseTermino grammar input
-    print t
-
+    let t = parseTermino grammar input
+    -- print t
+    return ()

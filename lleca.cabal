@@ -17,7 +17,8 @@ library
   hs-source-dirs:      src
   exposed-modules:     Lexer,
                        Parser,
-                       Generator
+                       Generator,
+                       Terms
   build-depends:       base >= 4.7 && < 5,
                        array,
                        pretty,
@@ -40,7 +41,9 @@ test-suite lleca-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules:       SpecLexer
+  other-modules:       SpecLexer,
+                       SpecParser,
+                       SpecGenerator
   build-depends:       base
                      , lleca
                      , hspec

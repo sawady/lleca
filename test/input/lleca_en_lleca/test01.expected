@@ -23,7 +23,7 @@ Cons(
         Production(
           Cons(
             SymbolLiteral(
-              "\\"
+              "\"
             ),
             Cons(
               SymbolNonterm(

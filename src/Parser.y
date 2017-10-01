@@ -1,6 +1,8 @@
 {
 module Parser where
 
+import Data.Char
+import Data.List
 import Lexer
 }
 
@@ -85,5 +87,31 @@ data TermAction = Hole
                 | TString String 
                 | TNum Int 
                 | TSust Int (Maybe TermAction) deriving (Ord, Eq, Show)
+
+llecaKeywords = ["_", "ID", "STRING", "NUM"]
+llecaSymbols  = ["|", "=>", "$", "(", ")", ",", "[", "]"]
+
+calcKeywords :: Grammar -> ([String], [String])
+calcKeywords g = partition isVar (concat $ map collect g)
+    where collect (Production _ syms _) = map get $ filter isLit syms
+          get (SymLit s) = s
+          isVar xs = head xs == '_' || isLetter (head xs)
+
+isLit :: Symbol -> Bool
+isLit (SymLit s) = True
+isLit _          = False
+
+isTerminal :: Symbol -> Bool
+isTerminal (SymMeta _) = False
+isTerminal _           = True
+
+initialMetaSymbol :: Grammar -> Symbol
+initialMetaSymbol = head . metaSymbols
+
+metaSymbols :: Grammar -> [Symbol]
+metaSymbols g = nub $ map (\(Production n _ _) -> SymMeta n) g
+
+terminalSymbols :: Grammar -> [Symbol]
+terminalSymbols g = nub $ concat $ map (\(Production _ syms _) -> filter isTerminal syms) g
 
 }

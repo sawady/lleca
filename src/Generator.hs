@@ -1,9 +1,9 @@
 module Generator where
 
+import Terms
 import Lexer
 import Parser
-import Data.Char
-import Data.List
+
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
 import Data.Maybe
@@ -15,38 +15,6 @@ import Control.Monad
 type FirstSet = Map.Map Symbol (Set.Set Symbol)
 type FollowSet = Map.Map Symbol (Set.Set Symbol)
 type LLTable   = Map.Map (Symbol, Symbol) (Set.Set Production)
-
-data Termino = 
-    Agujero
-  | Cadena String
-  | Numero Int
-  | Estructura String [Termino] deriving (Eq, Show)
-
-llecaKeywords = ["_", "ID", "STRING", "NUM"]
-llecaSymbols  = ["|", "=>", "$", "(", ")", ",", "[", "]"]
-
-calcKeywords :: Grammar -> ([String], [String])
-calcKeywords g = partition isVar (concat $ map collect g)
-    where collect (Production _ syms _) = map get $ filter isLit syms
-          get (SymLit s) = s
-          isVar xs = head xs == '_' || isLetter (head xs)
-
-isLit :: Symbol -> Bool
-isLit (SymLit s) = True
-isLit _          = False
-
-isTerminal :: Symbol -> Bool
-isTerminal (SymMeta _) = False
-isTerminal _           = True
-
-initialMetaSymbol :: Grammar -> Symbol
-initialMetaSymbol = head . metaSymbols
-
-metaSymbols :: Grammar -> [Symbol]
-metaSymbols g = nub $ map (\(Production n _ _) -> SymMeta n) g
-
-terminalSymbols :: Grammar -> [Symbol]
-terminalSymbols g = nub $ concat $ map (\(Production _ syms _) -> filter isTerminal syms) g
 
 firstSet :: [Symbol] -> [Symbol] -> Grammar -> FirstSet
 firstSet terminals metas grammar = withMeta
@@ -122,28 +90,7 @@ generateTable terminals metas grammar frsts fws = checkLL1 step
 
 checkLL1 s = if all (\s -> Set.size s <= 1) (Map.elems s) then s else error "The grammar is not LL(1)"
 
-equalSym :: Token -> Symbol -> Bool
-equalSym (TokenId s) SymID = True
-equalSym (TokenNum n) SymNUM = True
-equalSym (TokenString s) SymSTRING = True
-equalSym (TokenLit s1) (SymLit s2) = s1 == s2
-equalSym TokenDollar DollarSign = True
-equalSym _ _ = False
-
-leaf :: Token -> Termino
-leaf (TokenId s) = Estructura s []
-leaf (TokenNum n) = Numero n
-leaf (TokenString s) = Cadena s
-leaf (TokenLit s) = Estructura s []
-
-toSym :: Token -> Symbol
-toSym (TokenId s) = SymID
-toSym (TokenNum n) = SymNUM
-toSym (TokenString s) = SymSTRING
-toSym (TokenLit s) = SymLit s
-toSym TokenDollar = DollarSign
-
-parseTermino :: String -> String -> IO Termino
+parseTermino :: String -> String -> Termino
 parseTermino grammar input = 
     let tokenizedGrammar = lexer llecaKeywords llecaSymbols grammar
         parsedGrammar = parse tokenizedGrammar
@@ -155,9 +102,7 @@ parseTermino grammar input =
         table = generateTable terminals metas parsedGrammar frset foset
         tokenizedInput = lexer kws syms input
         firstSymbol = head metas
-        in do mapM_ print (Map.assocs table)
-              mapM_ print (tokenizedInput ++ [TokenDollar])
-              return $ analize firstSymbol table (tokenizedInput ++ [TokenDollar])
+        in analize firstSymbol table (tokenizedInput ++ [TokenDollar])
 
 analize :: Symbol -> LLTable -> [Token] -> Termino
 analize x table ts = 
@@ -194,4 +139,3 @@ fillHole :: Termino -> Termino -> Termino
 fillHole Agujero t = t
 fillHole (Estructura s ts) t = Estructura s (map (`fillHole` t) ts)
 fillHole x _ = x
-
