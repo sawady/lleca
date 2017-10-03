@@ -31,7 +31,8 @@ Una vez construida la aplicación puede utilizar el binario generado directament
 o puede continuar utilizando stack para mayor comodidad.
 
 La aplicación espera una serie de argumentos para poder ejecutarse correctamente.
-Puede ver los argumentos esperados ejecutando el programa con el flag `-?` o `--help`
+Puede ver los argumentos esperados ejecutando el programa con el flag `-?` o `--help`. 
+No obstante siempre imprime el AST del programa parseado.
 
 Utilice stack de la siguiente forma para ver la ayuda de la aplicación:
 
@@ -46,10 +47,12 @@ de la aplicación como le parezca.
 Los posibles flags que puede dar a la aplicación son:
 
 * -? --help          (Muestra el mensaje de ayuda)
-* -V --version       (Muestra la versión de la aplicación)
-* --numeric-version  (Muestra la versión numérica de la aplicación)
-* -t --tokens        (Muestra el resultado de la tokenización en la consola)
-* -a --ast           (Muestra el AST en formato texto en la consola)
+* -v --version       (Muestra la versión de la aplicación)
+* -t --tokens        (Muestra el resultado de la tokenización de la gramática y el programa input en la consola)
+* -p --productions   (Muestra como resultado las producciones de la gramática parseada)
+* --first            (Muestra el resultado de calcular el conjunto first de la gramática)
+* --follow           (Muestra el resultado de calcular el conjunto follow de la gramática)
+* --table            (Muestra el resultado de calcular la tabla LL(1) de la gramática)
 
 Puede combinar estos flags como desee.
 
@@ -57,9 +60,7 @@ Finalmente hay dos parametros que son de suma relevancia y que esperan un valor
 como argumento, el nombre del archivo de entrada y del de salida.
 
 * -g --file\[=\[input\]\]  (Gramática de entrada)
-* -f --file\[=\[input\]\]  (Archivo a parsear)
-* -o --out\[=\[output\]\]  (El archivo de salida, defaultea a ast)
-
+* -f --file\[=\[input\]\]  (Programa con dicha gramática a parsear)
 
 Corriendo los tests de la aplicación
 ------------------------------------
@@ -70,5 +71,4 @@ Si desea correr los tests puede ejecutar los mismos mediante el comando:
 stack test
 ```
 
-Esto evaluará los tests utilizando HSpec y verificará el correcto funcionamiento
-de las distintas partes del sistema.
+Esto evaluará los AST generados sobre los archivos encontrados en la carpeta `test/input`.

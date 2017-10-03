@@ -72,7 +72,7 @@ parseError (token:tokens) = error ("Parse error: invalid symbol \"" ++ show toke
 
 type Grammar = [Production]
 
-data Production = Production String [Symbol] TermAction deriving (Ord, Eq, Show)
+data Production = Production String [Symbol] TermAction deriving (Ord, Eq)
 
 data Symbol = SymID
             | SymSTRING 
@@ -80,13 +80,13 @@ data Symbol = SymID
             | SymLit String 
             | SymMeta String
             | Epsilon 
-            | DollarSign deriving (Read, Eq, Ord, Show)
+            | DollarSign deriving (Read, Eq, Ord)            
 
 data TermAction = Hole 
                 | TId String [TermAction]
                 | TString String 
                 | TNum Int 
-                | TSust Int (Maybe TermAction) deriving (Ord, Eq, Show)
+                | TSust Int (Maybe TermAction) deriving (Ord, Eq)
 
 llecaKeywords = ["_", "ID", "STRING", "NUM"]
 llecaSymbols  = ["|", "=>", "$", "(", ")", ",", "[", "]"]
@@ -96,6 +96,29 @@ calcKeywords g = partition isVar (concat $ map collect g)
     where collect (Production _ syms _) = map get $ filter isLit syms
           get (SymLit s) = s
           isVar xs = head xs == '_' || isLetter (head xs)
+
+instance Show Production where
+        show (Production s ss t) = 
+                if null ss
+                   then s ++ " | => " ++ show t
+                   else s ++ " | " ++ (intercalate " " (map show ss)) ++ " => " ++ show t
+
+instance Show Symbol where
+        show SymID = "ID"
+        show SymSTRING = "STRING"
+        show SymNUM = "NUM"
+        show (SymLit s) = "\"" ++ s ++ "\""
+        show (SymMeta s) = s
+        show Epsilon = "EPSILON"
+        show DollarSign = "\"$\""
+
+instance Show TermAction where
+        show Hole = "_"
+        show (TId s ts) = s ++ "(" ++ (intercalate ", " (map show ts)) ++ ")"
+        show (TString s) = "\"" ++ s ++ "\""
+        show (TNum n) = show n
+        show (TSust n Nothing) = "$" ++ show n
+        show (TSust n (Just t)) = "$" ++ show n ++ "[" ++ show t ++ "]"
 
 isLit :: Symbol -> Bool
 isLit (SymLit s) = True

@@ -35,6 +35,9 @@ executable lleca-exe
   build-depends:       base
                      , lleca
                      , containers
+                     , cmdargs
+                     , process
+                     , directory
   default-language:    Haskell2010
 
 test-suite lleca-test

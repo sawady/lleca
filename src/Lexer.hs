@@ -8,7 +8,14 @@ data Token = TokenId String
            | TokenNum Int
            | TokenString String
            | TokenLit String 
-           | TokenDollar deriving (Show, Eq)
+           | TokenDollar deriving Eq
+
+instance Show Token where
+    show (TokenId s) = s
+    show (TokenNum n) = show n
+    show (TokenString s) = s
+    show (TokenLit s) = s
+    show (TokenDollar) = "$"
 
 lexer :: [String] -> [String] -> String -> [Token]
 lexer kws syms [] = []
